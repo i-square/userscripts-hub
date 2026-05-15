@@ -1,12 +1,12 @@
 // ==UserScript==
-// @name         Sphinx RTD Theme 宽屏切换器
+// @name         ReadTheDocs 宽屏 & 侧边栏增强
 // @namespace    https://github.com/i-square/userscripts-hub
-// @version      0.1.0
+// @version      0.2.0
 // @author       https://github.com/i-square
-// @description  自动识别经典 sphinx_rtd_theme 文档，提供右上角宽屏切换与正文 max-width 像素调节。
+// @description  为 ReadTheDocs 文档提供宽屏切换、正文宽度调节、侧边栏一键隐藏。隐藏侧边栏时自动屏蔽 Ask AI 与版本浮窗。快捷键 [ 切换侧边栏。
 // @license      MIT
-// @updateURL    https://raw.githubusercontent.com/i-square/userscripts-hub/main/readthedocs/readthedocs-wide-toggle.user.js
-// @downloadURL  https://raw.githubusercontent.com/i-square/userscripts-hub/main/readthedocs/readthedocs-wide-toggle.user.js
+// @updateURL    https://raw.githubusercontent.com/i-square/userscripts-hub/main/readthedocs/wide-sidebar/readthedocs-wide-sidebar.user.js
+// @downloadURL  https://raw.githubusercontent.com/i-square/userscripts-hub/main/readthedocs/wide-sidebar/readthedocs-wide-sidebar.user.js
 // @match        https://*.readthedocs.io/*
 // @match        https://readthedocs.io/*
 // @grant        GM_addStyle
@@ -25,34 +25,32 @@
   const DEFAULT_CONFIG = {
     enabled: true,
     maxWidth: 1200,
+    sidebarOpen: true,
   };
   const WIDTH_LIMITS = {
     min: 600,
     maxStored: 9999,
   };
-  const UI = {
-    buttonWidth: 42,
-    topGap: 8,
-    sideGap: 16,
-  };
   const SELECTORS = {
     content: '.wy-nav-content',
     wrap: '.wy-nav-content-wrap',
     breadcrumbs: '.wy-nav-content .wy-breadcrumbs',
-    nav: '.wy-nav-content div[role="navigation"][aria-label="页面导航"], .wy-nav-content div[role="navigation"]',
-    source: '.wy-nav-content .wy-breadcrumbs-aside a, .wy-nav-content .wy-breadcrumbs-aside',
+    navSide: '.wy-nav-side',
   };
 
   let config = loadConfig();
   const state = {
     initialized: false,
-    rafId: null,
     container: null,
     mainBtn: null,
     icon: null,
     slider: null,
     valText: null,
     presets: [],
+    sidebarBtn: null,
+    sidebarValText: null,
+    wideBtn: null,
+    wideValText: null,
   };
 
   function clamp(value, min, max) {
@@ -76,6 +74,7 @@
     return {
       enabled: typeof saved.enabled === 'boolean' ? saved.enabled : DEFAULT_CONFIG.enabled,
       maxWidth: clampStoredWidth(saved.maxWidth ?? DEFAULT_CONFIG.maxWidth),
+      sidebarOpen: typeof saved.sidebarOpen === 'boolean' ? saved.sidebarOpen : DEFAULT_CONFIG.sidebarOpen,
     };
   }
 
@@ -84,6 +83,7 @@
       GM_setValue(STORAGE_KEY, {
         enabled: config.enabled,
         maxWidth: clampStoredWidth(config.maxWidth),
+        sidebarOpen: config.sidebarOpen,
       });
     } catch {}
   }
@@ -105,39 +105,6 @@
     return Math.min(clampStoredWidth(config.maxWidth), viewportMax);
   }
 
-  function getAnchorMetrics() {
-    const navBlock = query(SELECTORS.nav);
-    const content = query(SELECTORS.content);
-    const wrap = query(SELECTORS.wrap);
-    const sourceLink = query(SELECTORS.source);
-
-    const navRect = navBlock?.getBoundingClientRect();
-    const wrapRect = wrap?.getBoundingClientRect();
-    const sourceRect = sourceLink?.getBoundingClientRect();
-    const contentStyle = content ? window.getComputedStyle(content) : null;
-    const contentPaddingRight = parseFloat(contentStyle?.paddingRight || '0') || 0;
-    const sourceWidth = sourceRect?.width || sourceLink?.offsetWidth || 96;
-    const buttonWidth = state.mainBtn?.offsetWidth || UI.buttonWidth;
-
-    // X 轴基准固定按“正文拉满时”的右侧参考线计算，不跟随当前 max-width 变化。
-    const fullWidthSourceCenterX = wrapRect
-      ? wrapRect.right - contentPaddingRight - (sourceWidth / 2)
-      : sourceRect
-        ? sourceRect.left + (sourceRect.width / 2)
-        : window.innerWidth - 96;
-
-    const left = clamp(
-      Math.round(fullWidthSourceCenterX - (buttonWidth / 2)),
-      UI.sideGap,
-      window.innerWidth - buttonWidth - UI.sideGap
-    );
-
-    return {
-      top: Math.max(14, Math.round((navRect?.bottom ?? 56) + UI.topGap)),
-      left,
-    };
-  }
-
   function applyWideStyles() {
     const root = document.documentElement;
     root.setAttribute('data-tm-rtd-wide', config.enabled ? '1' : '0');
@@ -149,6 +116,22 @@
     }
   }
 
+  function applySidebarState() {
+    const navSide = query(SELECTORS.navSide);
+    const wrap = query(SELECTORS.wrap);
+    if (!navSide || !wrap) return;
+
+    if (config.sidebarOpen) {
+      document.body.classList.remove('rtd-sidebar-closed');
+      navSide.style.display = '';
+      wrap.style.marginLeft = '';
+    } else {
+      document.body.classList.add('rtd-sidebar-closed');
+      navSide.style.display = 'none';
+      wrap.style.marginLeft = '0';
+    }
+  }
+
   function setPanelOpen(open) {
     if (!state.container) return;
     state.container.dataset.open = open ? '1' : '0';
@@ -156,15 +139,10 @@
   }
 
   function syncControls() {
-    if (!state.mainBtn || !state.icon || !state.slider || !state.valText) return;
+    if (!state.slider || !state.valText) return;
 
     const storedWidth = clampStoredWidth(config.maxWidth);
     const isFullWidthMode = storedWidth >= WIDTH_LIMITS.maxStored;
-
-    state.mainBtn.classList.toggle('active', config.enabled);
-    state.mainBtn.setAttribute('aria-pressed', config.enabled ? 'true' : 'false');
-    state.mainBtn.title = config.enabled ? '点击关闭宽屏模式' : '点击启用宽屏模式';
-    state.icon.textContent = config.enabled ? '>-<' : '<->';
 
     state.slider.value = String(isFullWidthMode ? state.slider.max : storedWidth);
     state.slider.disabled = !config.enabled;
@@ -173,28 +151,22 @@
     state.presets.forEach((button) => {
       button.disabled = !config.enabled;
     });
-  }
 
-  function syncContainerPosition() {
-    if (!state.container) return;
-    const { top, left } = getAnchorMetrics();
-    state.container.style.top = `${top}px`;
-    state.container.style.left = `${left}px`;
-    state.container.style.right = 'auto';
+    if (state.sidebarBtn && state.sidebarValText) {
+      state.sidebarValText.textContent = config.sidebarOpen ? '显示' : '隐藏';
+      state.sidebarBtn.textContent = config.sidebarOpen ? '隐藏侧边栏' : '显示侧边栏';
+    }
+
+    if (state.wideBtn && state.wideValText) {
+      state.wideValText.textContent = config.enabled ? '开启' : '关闭';
+      state.wideBtn.textContent = config.enabled ? '关闭宽屏' : '开启宽屏';
+    }
   }
 
   function refreshLayout() {
     applyWideStyles();
+    applySidebarState();
     syncControls();
-
-    if (state.rafId) {
-      cancelAnimationFrame(state.rafId);
-    }
-
-    state.rafId = requestAnimationFrame(() => {
-      state.rafId = null;
-      syncContainerPosition();
-    });
   }
 
   function injectGlobalStyles() {
@@ -213,11 +185,25 @@
         white-space: normal !important;
       }
 
+      body.rtd-sidebar-closed #runllm-widget,
+      body.rtd-sidebar-closed .rllm-fixed {
+        display: none !important;
+        visibility: hidden !important;
+        pointer-events: none !important;
+      }
+
+      body.rtd-sidebar-closed readthedocs-flyout,
+      body.rtd-sidebar-closed .floating.container.bottom-right {
+        display: none !important;
+        visibility: hidden !important;
+        pointer-events: none !important;
+      }
+
       #tm-rtd-controls {
         position: fixed;
-        top: 96px;
+        top: 12px;
+        right: 14px;
         left: auto;
-        right: 32px;
         z-index: 2147483647;
         display: inline-flex;
         justify-content: flex-end;
@@ -226,34 +212,42 @@
       }
 
       .tm-rtd-main-btn {
-        width: 42px;
+        width: 36px;
         height: 36px;
         border: none;
-        border-radius: 10px;
-        background: linear-gradient(180deg, #16794a 0%, #105d39 100%);
+        border-radius: 50%;
+        background: rgba(30, 30, 30, 0.55);
         color: #fff;
         cursor: pointer;
-        box-shadow: 0 10px 24px rgba(0, 0, 0, 0.2);
+        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
         display: flex;
         align-items: center;
         justify-content: center;
-        transition: transform 120ms ease, box-shadow 120ms ease;
+        opacity: 0.45;
+        transition: opacity 200ms ease, transform 200ms ease, box-shadow 200ms ease, background 200ms ease;
+        backdrop-filter: blur(6px);
       }
 
-      .tm-rtd-main-btn:hover:not(:disabled) {
-        transform: translateY(-2px);
-        box-shadow: 0 12px 28px rgba(0, 0, 0, 0.26);
+      .tm-rtd-main-btn:hover {
+        opacity: 1;
+        background: rgba(30, 30, 30, 0.85);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
       }
 
-      .tm-rtd-main-btn.active {
-        background: linear-gradient(180deg, #1b74ff 0%, #1453bd 100%);
+      #tm-rtd-controls[data-open="1"] .tm-rtd-main-btn {
+        opacity: 1;
+        background: rgba(30, 30, 30, 0.85);
       }
 
       .tm-rtd-btn-icon {
-        font-family: ui-monospace, monospace;
-        font-size: 13px;
-        font-weight: 700;
-        letter-spacing: -0.6px;
+        font-size: 16px;
+        line-height: 1;
+        display: block;
+        transition: transform 400ms cubic-bezier(0.34, 1.56, 0.64, 1);
+      }
+
+      #tm-rtd-controls[data-open="1"] .tm-rtd-btn-icon {
+        transform: rotate(90deg);
       }
 
       .tm-rtd-panel {
@@ -330,6 +324,12 @@
         background: rgba(255, 255, 255, 0.18);
       }
 
+      .tm-rtd-divider {
+        border: none;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        margin: 10px 0 12px;
+      }
+
       .tm-rtd-footer {
         margin-top: 10px;
         font-size: 10px;
@@ -350,11 +350,30 @@
     container.id = 'tm-rtd-controls';
     container.dataset.open = '0';
     container.innerHTML = `
-      <button class="tm-rtd-main-btn" type="button" aria-label="切换宽屏模式" aria-expanded="false">
-        <span class="tm-rtd-btn-icon"></span>
+      <button class="tm-rtd-main-btn" type="button" aria-label="RTD 增强设置" aria-expanded="false">
+        <span class="tm-rtd-btn-icon">⚙️</span>
       </button>
       <div class="tm-rtd-panel">
-        <h4>Sphinx RTD 宽屏设置</h4>
+        <h4>RTD 增强设置</h4>
+        <div class="tm-rtd-row">
+          <div class="tm-rtd-label">
+            <span>侧边栏</span>
+            <span id="tm-rtd-sidebar-val"></span>
+          </div>
+          <div class="tm-rtd-presets">
+            <button class="tm-rtd-preset-btn" type="button" id="tm-rtd-sidebar-btn" style="flex:1 1 100%"></button>
+          </div>
+        </div>
+        <div class="tm-rtd-row">
+          <div class="tm-rtd-label">
+            <span>宽屏模式</span>
+            <span id="tm-rtd-wide-val"></span>
+          </div>
+          <div class="tm-rtd-presets">
+            <button class="tm-rtd-preset-btn" type="button" id="tm-rtd-wide-btn" style="flex:1 1 100%"></button>
+          </div>
+        </div>
+        <hr class="tm-rtd-divider">
         <div class="tm-rtd-row">
           <div class="tm-rtd-label">
             <span>最大宽度</span>
@@ -368,7 +387,7 @@
           <button class="tm-rtd-preset-btn" type="button" data-val="1800">1800px</button>
           <button class="tm-rtd-preset-btn" type="button" data-val="9999">100%</button>
         </div>
-        <div class="tm-rtd-footer">设置将自动保存并跨站生效</div>
+        <div class="tm-rtd-footer">设置自动保存并跨站生效 · 快捷键 [ 切换侧边栏</div>
       </div>
     `;
 
@@ -379,7 +398,11 @@
     state.icon = container.querySelector('.tm-rtd-btn-icon');
     state.slider = container.querySelector('.tm-rtd-slider');
     state.valText = container.querySelector('#tm-rtd-val');
-    state.presets = [...container.querySelectorAll('.tm-rtd-preset-btn')];
+    state.presets = [...container.querySelectorAll('.tm-rtd-preset-btn[data-val]')];
+    state.sidebarBtn = container.querySelector('#tm-rtd-sidebar-btn');
+    state.sidebarValText = container.querySelector('#tm-rtd-sidebar-val');
+    state.wideBtn = container.querySelector('#tm-rtd-wide-btn');
+    state.wideValText = container.querySelector('#tm-rtd-wide-val');
 
     container.addEventListener('mouseenter', () => setPanelOpen(true));
     container.addEventListener('mouseleave', () => setPanelOpen(false));
@@ -393,6 +416,17 @@
     });
 
     state.mainBtn.addEventListener('click', () => {
+      const isOpen = state.container.dataset.open === '1';
+      setPanelOpen(!isOpen);
+    });
+
+    state.sidebarBtn.addEventListener('click', () => {
+      config.sidebarOpen = !config.sidebarOpen;
+      saveConfig();
+      refreshLayout();
+    });
+
+    state.wideBtn.addEventListener('click', () => {
       config.enabled = !config.enabled;
       saveConfig();
       refreshLayout();
@@ -415,6 +449,16 @@
         refreshLayout();
       });
     });
+
+    document.addEventListener('keydown', (e) => {
+      const tag = document.activeElement?.tagName?.toUpperCase();
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || document.activeElement?.isContentEditable) return;
+      if (e.key === '[') {
+        config.sidebarOpen = !config.sidebarOpen;
+        saveConfig();
+        refreshLayout();
+      }
+    });
   }
 
   function init() {
@@ -426,7 +470,6 @@
     createUI();
     refreshLayout();
 
-    window.addEventListener('resize', refreshLayout, { passive: true });
     state.initialized = true;
     return true;
   }

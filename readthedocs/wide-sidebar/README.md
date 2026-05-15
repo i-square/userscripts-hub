@@ -1,8 +1,8 @@
-# Sphinx RTD Theme 宽屏切换器
+# ReadTheDocs 宽屏 & 侧边栏增强
 
-为使用 `sphinx_rtd_theme` 的 ReadTheDocs 文档站点提供宽屏模式切换，彻底解除正文区域 800px 宽度限制，支持滑块和预设值调节最大宽度。
+为 ReadTheDocs 文档站点提供宽屏模式切换与侧边栏一键隐藏，隐藏侧边栏时同步屏蔽 Ask AI 与版本浮窗。
 
-**安装：** [点击安装（Greasy Fork）](https://greasyfork.org/zh-CN/scripts/578273-sphinx-rtd-theme-%E5%AE%BD%E5%B1%8F%E5%88%87%E6%8D%A2%E5%99%A8) | [直接安装（GitHub Raw）](https://raw.githubusercontent.com/i-square/userscripts-hub/main/readthedocs/readthedocs-wide-toggle.user.js)
+**安装：** [点击安装（Greasy Fork）](https://greasyfork.org/zh-CN/scripts/578273) | [直接安装（GitHub Raw）](https://raw.githubusercontent.com/i-square/userscripts-hub/main/readthedocs/wide-sidebar/readthedocs-wide-sidebar.user.js)
 
 ---
 
@@ -10,23 +10,28 @@
 
 - **宽屏切换**：一键解除 `.wy-nav-content` 的 `max-width: 800px` 限制
 - **自定义宽度**：通过滑块（600px ~ 2500px）或预设按钮（1000 / 1400 / 1800 / 100%）调节
-- **设置持久化**：宽度和开关状态自动保存，跨页面、跨标签页生效
+- **侧边栏隐藏**：一键收起左侧导航栏，获得更大阅读区域
+- **净化模式**：侧边栏隐藏时自动屏蔽 Ask AI 悬浮按钮与右下角版本选择浮窗
+- **键盘快捷键**：按 `[` 快速切换侧边栏显隐
+- **设置持久化**：所有状态自动保存，跨页面、跨标签页生效
 - **表格修复**：宽屏模式下自动解除 `.wy-table-responsive` 的横向滚动限制
-- **精准定位**：控制按钮锚定在面包屑栏右上角，与页面原生元素对齐，不遮挡内容
 - **主题检测**：只在检测到 `sphinx_rtd_theme` 特征选择器时才初始化，不干扰其他站点
 
 ## 使用方法
 
 1. 打开任意 `*.readthedocs.io` 文档页面
-2. 右上角出现绿色小按钮（显示 `<->`）
-3. **点击按钮**切换宽屏模式开/关；按钮变蓝（显示 `>-<`）表示宽屏已启用
-4. **悬停按钮**展开设置面板，通过滑块或预设按钮调整正文最大宽度
+2. 右上角出现半透明齿轮按钮 ⚙️，悬停时高亮
+3. **点击齿轮**展开设置面板
+4. 面板内可切换侧边栏显隐、宽屏开关，以及调节最大宽度
+5. 也可直接按 `[` 快速切换侧边栏
 
 ## 界面说明
 
 | 控件                     | 说明                                                      |
 | ------------------------ | --------------------------------------------------------- |
-| 绿色/蓝色主按钮          | 切换宽屏开关；绿色 = 关闭，蓝色 = 开启                    |
+| ⚙️ 齿轮按钮               | 点击展开/收起设置面板，面板打开时齿轮旋转 90°             |
+| 侧边栏                   | 切换左侧导航栏显隐；隐藏时同步屏蔽 Ask AI 与版本浮窗      |
+| 宽屏模式                 | 切换宽屏开关                                              |
 | 宽度滑块                 | 拖动调节 `max-width`，范围 600px ~ 2500px，释放后自动保存 |
 | 1000px / 1400px / 1800px | 快速应用常用宽度预设                                      |
 | 100%                     | 设置为 `9999px`，即浏览器视口满宽                         |
@@ -43,7 +48,7 @@
 ## 依赖权限
 
 - `GM_addStyle` — 注入覆盖样式
-- `GM_getValue` / `GM_setValue` — 持久化宽度配置
+- `GM_getValue` / `GM_setValue` — 持久化配置
 
 ## 常见问题
 

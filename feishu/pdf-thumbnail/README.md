@@ -2,7 +2,7 @@
 
 针对飞书/Lark 知识库中"禁止下载"的 PDF 文档，自动捕获页面渲染的 WebP 缩略图，并支持一键批量下载。
 
-**安装：** [点击安装（Greasy Fork）](https://greasyfork.org/zh-CN/scripts/578274-%E9%A3%9E%E4%B9%A6pdf%E7%BC%A9%E7%95%A5%E5%9B%BE%E5%97%85%E6%8E%A2-%E4%B8%80%E9%94%AE%E4%B8%8B%E8%BD%BD) | [直接安装（GitHub Raw）](https://raw.githubusercontent.com/i-square/userscripts-hub/main/feishu/pdf-thumbnail/feishu-pdf-webp-sniffer.user.js)
+**安装：** [点击安装（Greasy Fork）](https://greasyfork.org/zh-CN/scripts/578274) | [直接安装（GitHub Raw）](https://raw.githubusercontent.com/i-square/userscripts-hub/main/feishu/pdf-thumbnail/feishu-pdf-webp-sniffer.user.js)
 
 ---
 
