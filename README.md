@@ -7,3 +7,4 @@
 | 脚本名称 | 功能描述 | 链接 |
 | --- | --- | --- |
 | 飞书PDF缩略图嗅探+一键下载 | 抓取禁止下载的PDF缩略图；按 data-number 命名；支持动态加载；过滤小图 | [文件](feishu/pdf-thumbnail/feishu-pdf-webp-sniffer.user.js) / [安装](https://raw.githubusercontent.com/i-square/userscripts-hub/main/feishu/pdf-thumbnail/feishu-pdf-webp-sniffer.user.js) |
+| Sphinx RTD Theme 宽屏切换器 | 针对 `*.readthedocs.io` 下的经典 `sphinx_rtd_theme` 文档，提供宽屏切换与正文 `max-width` 像素调节 | [文件](sphinx_rtd_theme/readthedocs-wide-toggle.user.js) / [安装](https://raw.githubusercontent.com/i-square/userscripts-hub/main/sphinx_rtd_theme/readthedocs-wide-toggle.user.js) |
