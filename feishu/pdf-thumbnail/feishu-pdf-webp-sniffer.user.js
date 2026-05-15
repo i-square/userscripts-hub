@@ -4,6 +4,7 @@
 // @version      0.1.0
 // @author       https://github.com/i-square
 // @description  抓取禁止下载的PDF缩略图；文件名用 data-number顺序命名；支持动态加载和抓取；过滤指定尺寸小图
+// @license      MIT
 // @updateURL    https://raw.githubusercontent.com/i-square/userscripts-hub/main/feishu/pdf-thumbnail/feishu-pdf-webp-sniffer.user.js
 // @downloadURL  https://raw.githubusercontent.com/i-square/userscripts-hub/main/feishu/pdf-thumbnail/feishu-pdf-webp-sniffer.user.js
 // @match        https://*.feishu.cn/wiki/*
