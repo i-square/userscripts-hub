@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         飞书招聘｜完整简历图片与 PDF 下载
 // @namespace    https://github.com/i-square/userscripts-hub
-// @version      1.0.2
+// @version      1.0.3
 // @author       https://github.com/i-square
 // @description  在简历「全屏」左侧添加“下载”按钮和设置图标；支持完整长图、逐页图片、原 PDF 及同时下载。仅处理当前选中附件。
 // @license      MIT
