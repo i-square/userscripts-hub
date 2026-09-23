@@ -1,11 +1,10 @@
 // ==UserScript==
 // @name         飞书招聘｜完整简历图片与 PDF 下载
 // @namespace    https://github.com/i-square/userscripts-hub
-// @version      1.0.3
+// @version      1.0.4
 // @author       https://github.com/i-square
 // @description  在简历「全屏」左侧添加“下载”按钮和设置图标；支持完整长图、逐页图片、原 PDF 及同时下载。仅处理当前选中附件。
 // @license      MIT
-// @homepageURL  https://greasyfork.org/zh-CN/scripts/596983-%E9%A3%9E%E4%B9%A6%E6%8B%9B%E8%81%98-%E5%AE%8C%E6%95%B4%E7%AE%80%E5%8E%86%E5%9B%BE%E7%89%87%E4%B8%8E-pdf-%E4%B8%8B%E8%BD%BD
 // @updateURL    https://raw.githubusercontent.com/i-square/userscripts-hub/main/feishu/recruitment-resume/feishu-resume-downloader.user.js
 // @downloadURL  https://raw.githubusercontent.com/i-square/userscripts-hub/main/feishu/recruitment-resume/feishu-resume-downloader.user.js
 // @match        https://*.feishu.cn/hire/*
