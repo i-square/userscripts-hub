@@ -49,7 +49,9 @@
 ## 适用范围
 
 - `https://*.feishu.cn/wiki/*`
+- `https://*.feishu.cn/file/*`
 - `https://*.larksuite.com/wiki/*`
+- `https://*.larksuite.com/file/*`
 
 ## 依赖权限
 
